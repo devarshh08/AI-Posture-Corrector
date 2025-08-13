@@ -35,6 +35,13 @@ while True:
             results.pose_landmarks, 
             mp_pose.POSE_CONNECTIONS
         )
+        
+    #we will extract the landmarks
+    try:
+        landmarks = results.pose_landmarks.landmark
+        print(landmarks)
+    except:
+        pass
 
     #writing frame to output file
     out.write(frame)
