@@ -42,19 +42,26 @@ while True:
     try:
         landmarks = results.pose_landmarks.landmark
         
-        #getting coordinates for left arm
+        #getting coordinates for upper half
         shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x, landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
-        elbow = [landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].x, landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].y]
-        wrist = [landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].x, landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].y]
+        ear = [landmarks[mp_pose.PoseLandmark.LEFT_EAR.value].x, landmarks[mp_pose.PoseLandmark.LEFT_EAR.value].y]
+        hip = [landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x, landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y]
         
         #calculating the angle and displaying it
-        angle = calculate_angle(shoulder, elbow, wrist)
+        neck_angle = calculate_angle(ear, shoulder, hip)
         
-        elbow_pixel_coords = tuple(np.multiply(elbow, [frame_width, frame_height]).astype(int))
+        #posture status
+        if neck_angle < 150:
+            posture_status = "SLOUCHING"
+        else:
+            posture_status = "GOOD"
         
-        cv2.putText(frame, str(int(angle)),
-                    elbow_pixel_coords,
-                    cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 2, cv2.LINE_AA)
+        #displaying posture status
+        cv2.rectangle(frame, (0, 0), (400, 70), (245, 117, 16), -1)
+        cv2.putText(frame, 'POSTURE STATUS', (15, 20),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 1, cv2.LINE_AA)
+        cv2.putText(frame, posture_status, (15, 60),
+                cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 2, cv2.LINE_AA)
         
     except:
         continue
