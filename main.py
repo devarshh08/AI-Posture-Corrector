@@ -1,5 +1,7 @@
 import cv2
 import mediapipe as mp
+from angle import calculate_angle
+import numpy as np
 
 webcam = cv2.VideoCapture(0)
 
@@ -36,12 +38,26 @@ while True:
             mp_pose.POSE_CONNECTIONS
         )
         
-    #we will extract the landmarks
+    #we will extract the landmarks for the particular joints we want to calculate angle of left elbow
     try:
         landmarks = results.pose_landmarks.landmark
-        print(landmarks)
+        
+        #getting coordinates for left arm
+        shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x, landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
+        elbow = [landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].x, landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].y]
+        wrist = [landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].x, landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].y]
+        
+        #calculating the angle and displaying it
+        angle = calculate_angle(shoulder, elbow, wrist)
+        
+        elbow_pixel_coords = tuple(np.multiply(elbow, [frame_width, frame_height]).astype(int))
+        
+        cv2.putText(frame, str(int(angle)),
+                    elbow_pixel_coords,
+                    cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 2, cv2.LINE_AA)
+        
     except:
-        pass
+        continue
 
     #writing frame to output file
     out.write(frame)
