@@ -42,7 +42,18 @@ We calculate the joint angles and display whether the posture is good or the per
 - From the 33 points we have from mediapipe, we isolate 3 points that we will be using for calculating the posture i.e Left Shoulder, Right Shoulder and the nose.
 - We calculate the absolute angle between the left and right shoulder and get its x coordinate.
 - Similarly we measure the horizontal distance between the nose and the shoulder x coordinate.
-- Now we compare this horizontal distance with a threshold that has been tested by me, I have personally checked various positions to arrive at this threshold of 0.015, it may also change in the future with iterations.
-- And finally we display the posture status, using the opencv function putText.
+- Now we compare this horizontal distance with a threshold that has been tested by me, I have personally checked various positions to arrive at this threshold of 0.02 based on testing the distance by changing my body postures.
+- And finally we display the posture status and the distance, using the opencv function putText.
 
-### 5. 
+### 5. Modifying the posture timing to notify after 8 seconds.
+
+We have been a bit strict with the posture timing, so we will modify it to alert after 8 seconds.
+
+We will use the time library and set a grace period. Implementing the following steps.
+
+- Before the while loop, we will create a slouch timer which is 0 at the moment and grace period which is 8 seconds.
+- After checking the posture status in the if statement by comparing whether the horizontal distance < threshold; if it is smaller the time is recorded in the slouch timer.
+- Now we check the elapsed time by subtracting the current time from the slouch timer(because this statement will run until the person is slouching)
+- Now when the limit crosses the grace period, it alerts the user that they are slouching.
+- And if the user is sitting properly, the slouch timer is set to zero and while loop keeps running.
+

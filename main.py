@@ -2,6 +2,7 @@ import cv2
 import mediapipe as mp
 from angle import calculate_angle
 import numpy as np
+import time
 
 webcam = cv2.VideoCapture(0)
 
@@ -18,7 +19,10 @@ mp_pose = mp.solutions.pose
 pose = mp_pose.Pose()
 mp_drawing = mp.solutions.drawing_utils
 
-#this will load a pretrained neural network into memory
+#implementing 8 seconds slouch timer
+slouch_timer = None
+grace_period = 1
+posture_status = "GOOD"
 
 while True:
     ret, frame = webcam.read()
@@ -51,16 +55,22 @@ while True:
         shoulder_midpoint_x = (left_shoulder.x + right_shoulder.x) / 2
         
         #we will be implementing a forward threshold for more or less sensitivity
-        forward_threshold = 0.015
+        forward_threshold = 0.02
         
         #now we will calculate the angle/horizontal distance which is the absolute distance between the nose and shoulders
         horizontal_distance = abs(nose.x - shoulder_midpoint_x)
         
         #posture status
-        if horizontal_distance > forward_threshold:
-            posture_status = "SLOUCHING"
-        else:
-            posture_status = "GOOD"
+        if horizontal_distance < forward_threshold:
+            if slouch_timer is None:
+                slouch_timer = time.time()
+            
+            elapsed_time = time.time() - slouch_timer
+            if elapsed_time > grace_period:
+                posture_status = "SLOUCHING"
+            else:
+                slouch_timer = None
+                posture_status = "GOOD"
         
         #displaying posture status
         cv2.rectangle(frame, (0, 0), (400, 70), (245, 117, 16), -1)
@@ -68,6 +78,9 @@ while True:
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 1, cv2.LINE_AA)
         cv2.putText(frame, posture_status, (15, 60),
                 cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 2, cv2.LINE_AA)
+        
+        cv2.putText(frame, f'DISTANCE: {round(horizontal_distance, 4)}', (15, 100),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2, cv2.LINE_AA)
         
     except:
         continue
