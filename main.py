@@ -43,15 +43,21 @@ while True:
         landmarks = results.pose_landmarks.landmark
         
         #getting coordinates for upper half
-        shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x, landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
-        ear = [landmarks[mp_pose.PoseLandmark.LEFT_EAR.value].x, landmarks[mp_pose.PoseLandmark.LEFT_EAR.value].y]
-        hip = [landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x, landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y]
+        left_shoulder = landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value]
+        right_shoulder = landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value]
+        nose = landmarks[mp_pose.PoseLandmark.NOSE.value]
         
-        #calculating the angle and displaying it
-        neck_angle = calculate_angle(ear, shoulder, hip)
+        #calculating the midpoint between the shoulders
+        shoulder_midpoint_x = (left_shoulder.x + right_shoulder.x) / 2
+        
+        #we will be implementing a forward threshold for more or less sensitivity
+        forward_threshold = 0.015
+        
+        #now we will calculate the angle/horizontal distance which is the absolute distance between the nose and shoulders
+        horizontal_distance = abs(nose.x - shoulder_midpoint_x)
         
         #posture status
-        if neck_angle < 150:
+        if horizontal_distance > forward_threshold:
             posture_status = "SLOUCHING"
         else:
             posture_status = "GOOD"
@@ -72,11 +78,10 @@ while True:
     #displaying frame
     cv2.imshow('Camera', frame)
 
-    #press 'q' to exit the loop
+    #press 'q' to exit the loop 
     if cv2.waitKey(1) == ord('q'):
         break
     
 webcam.release()
 out.release()
 cv2.destroyAllWindows()
-

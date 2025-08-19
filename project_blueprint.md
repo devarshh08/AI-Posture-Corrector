@@ -33,4 +33,16 @@ The task outputs body pose landmarks in image coordinates and in 3-dimensional w
 ![Joints/Skeleton in mediapipe](image.png)
 
 
-### 4. 
+### 4. Calculating joint angles for posture detection
+
+So far we have tracked the skeleton, and the next step is to turn the visual data into meaningful numbers.
+We do this by calculating the angles between joints to detect the posture.
+
+We calculate the joint angles and display whether the posture is good or the person is slouching: 
+- From the 33 points we have from mediapipe, we isolate 3 points that we will be using for calculating the posture i.e Left Shoulder, Right Shoulder and the nose.
+- We calculate the absolute angle between the left and right shoulder and get its x coordinate.
+- Similarly we measure the horizontal distance between the nose and the shoulder x coordinate.
+- Now we compare this horizontal distance with a threshold that has been tested by me, I have personally checked various positions to arrive at this threshold of 0.015, it may also change in the future with iterations.
+- And finally we display the posture status, using the opencv function putText.
+
+### 5. 
