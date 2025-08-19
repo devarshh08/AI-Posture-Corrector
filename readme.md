@@ -47,7 +47,7 @@ We calculate the joint angles and display whether the posture is good or the per
 
 ### 5. Modifying the posture timing to notify after 8 seconds.
 
-We have been a bit strict with the posture timing, so we will modify it to alert after 8 seconds.
+We have been a bit strict with the posture timing, so we will modify it to alert after 5 seconds.
 
 We will use the time library and set a grace period. Implementing the following steps.
 

@@ -21,8 +21,9 @@ mp_drawing = mp.solutions.drawing_utils
 
 #implementing 8 seconds slouch timer
 slouch_timer = None
-grace_period = 1
+grace_period = 5 
 posture_status = "GOOD"
+horizontal_distance_display = 0.0
 
 while True:
     ret, frame = webcam.read()
@@ -60,17 +61,19 @@ while True:
         #now we will calculate the angle/horizontal distance which is the absolute distance between the nose and shoulders
         horizontal_distance = abs(nose.x - shoulder_midpoint_x)
         
+        is_slouching = horizontal_distance < forward_threshold
+        
         #posture status
-        if horizontal_distance < forward_threshold:
+        if is_slouching:
             if slouch_timer is None:
                 slouch_timer = time.time()
             
             elapsed_time = time.time() - slouch_timer
             if elapsed_time > grace_period:
                 posture_status = "SLOUCHING"
-            else:
-                slouch_timer = None
-                posture_status = "GOOD"
+        else:
+            slouch_timer = None
+            posture_status = "GOOD"
         
         #displaying posture status
         cv2.rectangle(frame, (0, 0), (400, 70), (245, 117, 16), -1)
