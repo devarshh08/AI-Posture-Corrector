@@ -18,7 +18,7 @@
 4. **Repository Selection**:
    - **Repository**: `devarshh08/AI-Posture-Corrector`
    - **Branch**: `main`
-   - **Main file path**: `streamlit_app.py`
+   - **Main file path**: `app.py` (recommended) or `streamlit_app.py`
 
 5. **Deploy**: Click "Deploy!" and wait for the deployment to complete
 
@@ -27,10 +27,16 @@ Your app will be available at: `https://ai-posture-corrector-[random-id].streaml
 
 ## Configuration Files ✅
 
-All necessary files are already in place:
+Multiple deployment options are available:
 
-- ✅ `streamlit_app.py` - Main application file
-- ✅ `requirements.txt` - Dependencies specification
+### Option 1: Minimal Version (Recommended)
+- ✅ `app.py` - Simplified app with fallback analysis
+- ✅ `requirements.txt` - Minimal dependencies (no MediaPipe)
+- ✅ `angle.py` - Required utility module
+
+### Option 2: Full MediaPipe Version
+- ✅ `streamlit_app.py` - Full-featured app with MediaPipe
+- ✅ `requirements-mediapipe.txt` - Full dependencies
 - ✅ `angle.py` - Required utility module
 
 ## Dependencies Included
@@ -59,17 +65,25 @@ Once deployed, your Streamlit app will have:
 
 ### Common Issues
 
-1. **Build Fails**: 
-   - Check that all files are committed and pushed
-   - Verify `requirements.txt` format
+1. **MediaPipe Installation Fails**: 
+   - Use `app.py` instead of `streamlit_app.py` for deployment
+   - The minimal version works without MediaPipe
+   - Falls back to basic computer vision analysis
 
-2. **Import Errors**:
-   - Ensure all dependencies are listed in `requirements.txt`
+2. **Build Fails**: 
+   - Check that all files are committed and pushed
+   - Try the minimal `requirements.txt` (without MediaPipe)
+   - Verify Python version compatibility
+
+3. **Import Errors**:
+   - Switch to `app.py` which has graceful MediaPipe fallback
+   - Use `requirements.txt` instead of `requirements-mediapipe.txt`
    - Check for version compatibility
 
-3. **Camera Not Working**:
+4. **Camera Not Working**:
    - This is expected in the cloud version
    - Users will upload photos instead of live video
+   - The app works with static image analysis
 
 ### Alternative Deployment Options
 
