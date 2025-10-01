@@ -1,59 +1,194 @@
-# AI Posture corrector
+# 🏃‍♂️ AI Posture Corrector
 
-The goal/idea of this project is to build an AI posture corrector which will scan through the webcam of your laptop and give you suggestions based on your posture, as to what to do.
+An intelligent posture monitoring system that uses AI-powered computer vision to detect slouching and provide real-time feedback with audio alerts. Available as both a desktop application and web interface.
 
-### 1. We first start by installing python libraries such as opencv for getting the video
+## ✨ Features
 
-### 2. Second step is to capture the video by using opencv
+- **Real-time Posture Detection**: Uses MediaPipe AI to analyze your posture through your webcam
+- **Smart Alerts**: Audio beep notifications when slouching is detected
+- **Grace Period**: Configurable delay before alerts to avoid false alarms
+- **Web Interface**: Streamlit-based web application for easy access
+- **Desktop Version**: Traditional OpenCV application with video recording
+- **Adjustable Sensitivity**: Customize detection thresholds for your needs
 
-How to capture a video:
-- Use cv2.VideoCapture() to create a video capture object for the camera.
-- Create a VideoWriter object to save captured frames as a video in the computer.
-- Set up an infinite while loop and use the read() method to read the frames using the above created object.
-- Use cv2.imshow() method to show the frames in the video.
-- Breaks the loop when the user clicks a specific key.
+## 🚀 Quick Start
 
-### 3. Next, we use mediapipe to capture the pose and skeleton
+### Option 1: Web Application (Recommended)
 
-Mediapipe is a cross-platform library developed by Google that provides amazing ready-to-use ML solutions for computer vision tasks.
+1. **Install Dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-Here we will be using the MediaPipe pose landmarker, which lets you detect landmarks of human bodies in an image or video
+2. **Run Streamlit App**:
+   ```bash
+   streamlit run streamlit_app.py
+   ```
 
-This task uses machine learning (ML) models that work with single images or video.
+3. **Access the App**: Open your browser to `http://localhost:8501`
 
-The task outputs body pose landmarks in image coordinates and in 3-dimensional world coordinates.
+### Option 2: Desktop Application
 
-- We first define an object for detecting the pose with mediapipe
-- Next, inside the while true loop; We need to convert BGR image(default for opencv) to RGB image(mediapipe takes input in RGB)
-- Now, after converting the image we draw the pose annotation to the original frame we are displaying while displaying our webcam feed with opencv
+1. **Install Dependencies**:
+   ```bash
+   pip install opencv-python mediapipe numpy
+   ```
 
+2. **Run Desktop App**:
+   ```bash
+   python main.py
+   ```
 
-### Fig : Joints in mediapipe skeleton
+3. **Controls**: Press 'q' to quit
 
-![Joints/Skeleton in mediapipe](image.png)
+## 📋 Requirements
 
+- Python 3.8+
+- Webcam/Camera access
+- Dependencies listed in `requirements.txt`
 
-### 4. Calculating joint angles for posture detection
+## 🔧 Installation
 
-So far we have tracked the skeleton, and the next step is to turn the visual data into meaningful numbers.
-We do this by calculating the angles between joints to detect the posture.
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/your-username/AI-Posture-Corrector.git
+   cd AI-Posture-Corrector
+   ```
 
-We calculate the joint angles and display whether the posture is good or the person is slouching: 
-- From the 33 points we have from mediapipe, we isolate 3 points that we will be using for calculating the posture i.e Left Shoulder, Right Shoulder and the nose.
-- We calculate the absolute angle between the left and right shoulder and get its x coordinate.
-- Similarly we measure the horizontal distance between the nose and the shoulder x coordinate.
-- Now we compare this horizontal distance with a threshold that has been tested by me, I have personally checked various positions to arrive at this threshold of 0.02 based on testing the distance by changing my body postures.
-- And finally we display the posture status and the distance, using the opencv function putText.
+2. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-### 5. Modifying the posture timing to notify after 8 seconds.
+3. **Run the application**:
+   ```bash
+   # For web interface
+   streamlit run streamlit_app.py
+   
+   # For desktop application
+   python main.py
+   ```
 
-We have been a bit strict with the posture timing, so we will modify it to alert after 5 seconds.
+## 🌐 Deploy to Streamlit Cloud
 
-We will use the time library and set a grace period. Implementing the following steps.
+1. **Fork this repository** to your GitHub account
+2. **Visit** [share.streamlit.io](https://share.streamlit.io)
+3. **Connect your GitHub** account
+4. **Deploy** by selecting your forked repository
+5. **Set the main file** to `streamlit_app.py`
 
-- Before the while loop, we will create a slouch timer which is 0 at the moment and grace period which is 8 seconds.
-- After checking the posture status in the if statement by comparing whether the horizontal distance < threshold; if it is smaller the time is recorded in the slouch timer.
-- Now we check the elapsed time by subtracting the current time from the slouch timer(because this statement will run until the person is slouching)
-- Now when the limit crosses the grace period, it alerts the user that they are slouching.
-- And if the user is sitting properly, the slouch timer is set to zero and while loop keeps running.
+## 📊 How It Works
+
+### 1. Pose Detection
+- Uses Google's MediaPipe framework
+- Detects 33 body landmarks in real-time
+- Focuses on nose, left shoulder, and right shoulder positions
+
+### 2. Posture Analysis
+- Calculates horizontal distance between nose and shoulder midpoint
+- Compares against configurable threshold (default: 0.02)
+- Determines if user is slouching based on forward head position
+
+### 3. Smart Feedback System
+- **Grace Period**: 5-second delay before alerts (configurable)
+- **Audio Alerts**: Beep sound every 3 seconds while slouching
+- **Visual Feedback**: Real-time posture status display
+- **Distance Metrics**: Shows exact measurements for transparency
+
+## 🎛️ Configuration
+
+### Desktop Application (`main.py`)
+- `grace_period`: Time before slouch alert (default: 5 seconds)
+- `forward_threshold`: Sensitivity threshold (default: 0.02)
+- `beep_interval`: Time between beeps (default: 3 seconds)
+
+### Web Application (`streamlit_app.py`)
+- Configurable through sidebar controls
+- Real-time sensitivity adjustment
+- Toggle sound alerts on/off
+- Adjustable grace period
+
+## 📁 Project Structure
+
+```
+AI-Posture-Corrector/
+├── main.py              # Desktop application with beeping
+├── streamlit_app.py     # Web application interface
+├── angle.py             # Angle calculation utilities
+├── requirements.txt     # Python dependencies
+├── readme.md           # This file
+├── image.png           # MediaPipe pose landmarks diagram
+└── tempCodeRunnerFile.py # Temporary file
+```
+
+## 🔊 Audio Features
+
+### Desktop Version
+- Uses `winsound` library for Windows systems
+- Fallback to system beep (`\a`) for other platforms
+- Non-blocking audio with threading
+
+### Web Version
+- Browser-based audio using Web Audio API
+- JavaScript implementation for cross-platform compatibility
+- Configurable through UI controls
+
+## 🎯 Technical Details
+
+- **AI Model**: MediaPipe Pose Detection
+- **Detection Points**: 33 body landmarks
+- **Key Landmarks**: Nose, Left Shoulder, Right Shoulder
+- **Algorithm**: Horizontal distance calculation
+- **Default Threshold**: 0.02 (lower = more sensitive)
+- **Grace Period**: 5 seconds (configurable)
+- **Video Output**: Desktop version saves to `output.mp4`
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **Camera not detected**:
+   - Ensure camera permissions are granted
+   - Check if another application is using the camera
+   - Try changing camera index in `cv2.VideoCapture(0)` to `cv2.VideoCapture(1)`
+
+2. **Audio not working**:
+   - On Windows: Ensure sound is not muted
+   - On Web: Check browser audio permissions
+   - Try enabling/disabling audio alerts in settings
+
+3. **False slouch detection**:
+   - Adjust sensitivity threshold
+   - Ensure good lighting conditions
+   - Position camera at eye level
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+## 🙏 Acknowledgments
+
+- **MediaPipe**: Google's ML framework for pose detection
+- **OpenCV**: Computer vision library
+- **Streamlit**: Web application framework
+- **Community**: Thanks to all contributors and users
+
+## 📞 Support
+
+If you encounter any issues or have questions:
+1. Check the troubleshooting section above
+2. Open an issue on GitHub
+3. Provide detailed information about your setup and the problem
+
+---
+
+**Happy posturing! 🏃‍♂️✨**
 

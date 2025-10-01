@@ -3,6 +3,8 @@ import mediapipe as mp
 from angle import calculate_angle
 import numpy as np
 import time
+import winsound
+import threading
 
 webcam = cv2.VideoCapture(0)
 
@@ -24,6 +26,16 @@ slouch_timer = None
 grace_period = 5 
 posture_status = "GOOD"
 horizontal_distance_display = 0.0
+last_beep_time = 0
+beep_interval = 3  # Beep every 3 seconds while slouching
+
+def play_beep():
+    """Play a beep sound in a separate thread to avoid blocking"""
+    try:
+        winsound.Beep(1000, 500)  # 1000Hz frequency, 500ms duration
+    except:
+        # Fallback for systems where winsound doesn't work
+        print('\a')  # System beep
 
 while True:
     ret, frame = webcam.read()
@@ -71,6 +83,11 @@ while True:
             elapsed_time = time.time() - slouch_timer
             if elapsed_time > grace_period:
                 posture_status = "SLOUCHING"
+                # Play beep sound if enough time has passed since last beep
+                current_time = time.time()
+                if current_time - last_beep_time > beep_interval:
+                    threading.Thread(target=play_beep, daemon=True).start()
+                    last_beep_time = current_time
         else:
             slouch_timer = None
             posture_status = "GOOD"
