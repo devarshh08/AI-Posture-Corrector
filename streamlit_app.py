@@ -1,11 +1,10 @@
 import streamlit as st
 import cv2
 import mediapipe as mp
-from angle import calculate_angle
 import numpy as np
 import time
 from PIL import Image
-from streamlit_webrtc import webrtc_streamer, VideoTransformerBase, RTCConfiguration
+from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration, WebRtcMode
 
 # Set page configuration
 st.set_page_config(
@@ -39,22 +38,28 @@ if 'last_beep_time' not in st.session_state:
 if 'posture_status' not in st.session_state:
     st.session_state.posture_status = "GOOD"
 
-# RTC Configuration for deployment
+# RTC Configuration for deployment (improved)
 RTC_CONFIGURATION = RTCConfiguration(
-    {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
+    {"iceServers": [
+        {"urls": ["stun:stun.l.google.com:19302"]},
+        {"urls": ["stun:stun1.l.google.com:19302"]},
+    ]}
 )
 
-class PostureTransformer(VideoTransformerBase):
-    def __init__(self, sensitivity, grace_period, beep_interval):
-        self.sensitivity = sensitivity
-        self.grace_period = grace_period
-        self.beep_interval = beep_interval
+class PostureProcessor(VideoProcessorBase):
+    def __init__(self):
+        self.sensitivity = 0.02
+        self.grace_period = 5
+        self.beep_interval = 3
+        self.slouch_timer = None
+        self.last_beep_time = 0
+        self.posture_status = "GOOD"
 
-    def transform(self, frame):
-        image = frame.to_ndarray(format="bgr24")
+    def recv(self, frame):
+        img = frame.to_ndarray(format="bgr24")
 
         # Convert BGR to RGB
-        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         
         # Process the image to find pose
         results = pose.process(image_rgb)
@@ -62,9 +67,11 @@ class PostureTransformer(VideoTransformerBase):
         # Draw pose landmarks
         if results.pose_landmarks:
             mp_drawing.draw_landmarks(
-                image,
+                img,
                 results.pose_landmarks,
-                mp_pose.POSE_CONNECTIONS
+                mp_pose.POSE_CONNECTIONS,
+                mp_drawing.DrawingSpec(color=(245,117,66), thickness=2, circle_radius=2),
+                mp_drawing.DrawingSpec(color=(245,66,230), thickness=2, circle_radius=2)
             )
             
             # Extract landmarks
@@ -87,30 +94,31 @@ class PostureTransformer(VideoTransformerBase):
                 current_time = time.time()
                 
                 if is_slouching:
-                    if st.session_state.slouch_timer is None:
-                        st.session_state.slouch_timer = current_time
+                    if self.slouch_timer is None:
+                        self.slouch_timer = current_time
                     
-                    elapsed_time = current_time - st.session_state.slouch_timer
+                    elapsed_time = current_time - self.slouch_timer
                     if elapsed_time > self.grace_period:
+                        self.posture_status = "SLOUCHING"
                         st.session_state.posture_status = "SLOUCHING"
-                        # Beep logic would go here if we could trigger server-side sounds reliably
                 else:
-                    st.session_state.slouch_timer = None
+                    self.slouch_timer = None
+                    self.posture_status = "GOOD"
                     st.session_state.posture_status = "GOOD"
 
             except Exception as e:
-                print(f"Error in landmark processing: {e}") # Log error for debugging
+                self.posture_status = "ERROR"
                 st.session_state.posture_status = "ERROR"
         
         # Add status overlay
-        status_color = (0, 0, 255) if st.session_state.posture_status == "SLOUCHING" else (0, 255, 0)
-        cv2.rectangle(image, (0, 0), (400, 70), (245, 117, 16), -1)
-        cv2.putText(image, 'POSTURE STATUS', (15, 20),
+        status_color = (0, 0, 255) if self.posture_status == "SLOUCHING" else (0, 255, 0)
+        cv2.rectangle(img, (0, 0), (400, 70), (245, 117, 16), -1)
+        cv2.putText(img, 'POSTURE STATUS', (15, 20),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 1, cv2.LINE_AA)
-        cv2.putText(image, st.session_state.posture_status, (15, 60),
+        cv2.putText(img, self.posture_status, (15, 60),
                     cv2.FONT_HERSHEY_SIMPLEX, 1.5, status_color, 2, cv2.LINE_AA)
         
-        return image
+        return av.VideoFrame.from_ndarray(img, format="bgr24")
 
 def main():
     st.title("🏃‍♂️ AI Posture Corrector")
@@ -133,12 +141,41 @@ def main():
     4. Your posture status will be displayed on the video.
     """)
     
-    webrtc_streamer(
+    # Display current posture status
+    status_placeholder = st.empty()
+    if st.session_state.posture_status == "SLOUCHING":
+        status_placeholder.error(f"⚠️ Current Status: {st.session_state.posture_status}")
+    elif st.session_state.posture_status == "GOOD":
+        status_placeholder.success(f"✅ Current Status: {st.session_state.posture_status}")
+    else:
+        status_placeholder.info(f"ℹ️ Current Status: {st.session_state.posture_status}")
+    
+    # WebRTC Streamer
+    ctx = webrtc_streamer(
         key="posture-analysis",
-        video_transformer_factory=lambda: PostureTransformer(sensitivity, grace_period, beep_interval),
+        mode=WebRtcMode.SENDRECV,
+        rtc_configuration=RTC_CONFIGURATION,
+        video_processor_factory=PostureProcessor,
         media_stream_constraints={"video": True, "audio": False},
         async_processing=True,
     )
+    
+    # Add troubleshooting section
+    with st.expander("🔧 Troubleshooting"):
+        st.markdown("""
+        **If the video doesn't start:**
+        - Make sure you've allowed camera access in your browser
+        - Try refreshing the page
+        - Check if another application is using your camera
+        - Try a different browser (Chrome/Edge work best)
+        
+        **WebRTC Issues:**
+        - If you see connection errors, your network might be blocking WebRTC
+        - Try disabling VPN or firewall temporarily
+        - Some corporate networks block WebRTC
+        
+        **Alternative:** Use the simpler `app.py` version for snapshot-based analysis
+        """)
 
 if __name__ == "__main__":
     main()
